@@ -51,14 +51,20 @@ class SshShell extends AbstractShell
 
     public function exec(string $command, ?string $cwd = null, ?array $env = null): Result
     {
+        $cwd = $cwd ? $cwd : $this->cwd;
+        $env = $env ? array_replace($this->env, $env) : $this->env;
         $e = '';
         if ($env) {
             foreach ($env as $key => $value) {
-                $e .= ' ' . $key . '=' . $value;
+                $e .= ' ' . $key . '="' . addslashes($value) . '"';
             }
         }
-        $connect = '-i ' . $this->identityFile . ' -p ' . $this->port . ' ' . $this->user . '@' . $this->host;
-        $cmd = 'rsh ' . $connect . ' "cd ' . $cwd . ' && ' . $e . ' ' . $command . '"';
+        $connect = '-p ' . $this->port;
+        if ($this->identityFile) $connect .= ' -i ' . $this->identityFile;
+        $connect .= ' ' . $this->user . '@' . $this->host;
+        $cmd = 'rsh ' . $connect . ' "';
+        if ($cwd) $cmd .= 'cd ' . $cwd . ' && ';
+        $cmd .= $e . ' ' . $command . '"';
         return $this->run($cmd);
     }
 
