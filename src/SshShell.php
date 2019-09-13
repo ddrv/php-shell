@@ -72,7 +72,7 @@ class SshShell extends AbstractShell
             }
         }
         $connect = '-p ' . $this->port;
-        if ($this->isPasswordAuthDisabled) $connect .= '-o PasswordAuthentication=no';
+        if ($this->isPasswordAuthDisabled) $connect .= ' -o PasswordAuthentication=no';
         if ($this->identityFile) $connect .= ' -i ' . $this->identityFile;
         $connect .= ' ' . $this->user . '@' . $this->host;
         $cmd = 'rsh ' . $connect . ' "';
