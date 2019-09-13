@@ -89,10 +89,12 @@ abstract class AbstractShell implements ShellInterface
         $cwd = $cwd ? $cwd : $this->cwd;
         $env = $env ? array_replace($this->env, $env) : $this->env;
         $exec = proc_open($command, $this->descriptors, $pipes, $cwd, $env, null);
-        $output = stream_get_contents($pipes[1]);
-        $errors = stream_get_contents($pipes[2]);
-        foreach (array_keys($this->descriptors) as $key) {
-            fclose($pipes[$key]);
+        $output = null;
+        $errors = null;
+        if (is_resource($pipes[1])) $output = stream_get_contents($pipes[1]);
+        if (is_resource($pipes[2])) $errors = stream_get_contents($pipes[2]);
+        foreach ($pipes as $pipe) {
+            fclose($pipe);
         }
         $exitCode = proc_close($exec);
         return new Result((int)$exitCode, $output, $errors);
