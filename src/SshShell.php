@@ -26,10 +26,6 @@ class SshShell extends AbstractShell
      * @var string|null
      */
     private $identityFile;
-    /**
-     * @var bool
-     */
-    private $isPasswordAuthDisabled;
 
     public function __construct(
         string $user,
@@ -38,23 +34,11 @@ class SshShell extends AbstractShell
         ?string $identityFile = null,
         ?string $cwd = null,
         ?array $env = null,
-        bool $mergeErrorsAndOutput = false,
-        bool $isPasswordAuthDisabled = false
+        bool $mergeErrorsAndOutput = false
     )
     {
         $this->connect($user, $host, $port, $identityFile);
         parent::__construct($cwd, $env, $mergeErrorsAndOutput);
-        $this->isPasswordAuthDisabled = $isPasswordAuthDisabled;
-    }
-
-    public function disablePasswordAuth()
-    {
-        $this->isPasswordAuthDisabled = true;
-    }
-
-    public function enablePasswordAuth()
-    {
-        $this->isPasswordAuthDisabled = false;
     }
 
     public function connect(string $user, string $host, int $port = 22, ?string $identityFile = null)

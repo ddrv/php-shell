@@ -31,6 +31,11 @@ abstract class AbstractShell implements ShellInterface
      */
     protected $descriptors = [];
 
+    /**
+     * @var bool
+     */
+    protected $isPasswordAuthDisabled = true;
+
     public function __construct(?string $cwd = null, ?array $env = null, bool $mergeErrorsAndOutput = false)
     {
         if ($mergeErrorsAndOutput) {
@@ -75,6 +80,18 @@ abstract class AbstractShell implements ShellInterface
     public function splitErrorsAndOutput(): ShellInterface
     {
         $this->mergeErrorsAndOutput = false;
+        return $this;
+    }
+
+    public function disablePasswordAuth(): ShellInterface
+    {
+        $this->isPasswordAuthDisabled = true;
+        return $this;
+    }
+
+    public function enablePasswordAuth(): ShellInterface
+    {
+        $this->isPasswordAuthDisabled = false;
         return $this;
     }
 

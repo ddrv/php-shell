@@ -19,6 +19,10 @@ interface ShellInterface
 
     public function splitErrorsAndOutput(): self;
 
+    public function disablePasswordAuth(): self;
+
+    public function enablePasswordAuth(): self;
+
     public function exec(string $command, ?string $cwd = null, ?array $env = null): Result;
 
     public function silent(string $command, ?string $cwd = null, ?array $env = null): void;
