@@ -2,8 +2,11 @@
 
 namespace Ddrv\Shell;
 
+use Ddrv\Shell\Contract\DescriptorInterface;
 use Ddrv\Shell\Contract\Result;
 use Ddrv\Shell\Contract\ShellInterface;
+use Ddrv\Shell\Descriptor\ReadablePipe;
+use Ddrv\Shell\Descriptor\WritablePipe;
 
 abstract class AbstractShell implements ShellInterface
 {
@@ -23,6 +26,11 @@ abstract class AbstractShell implements ShellInterface
      */
     protected $env = [];
 
+    /**
+     * @var array
+     */
+    protected $descriptors = [];
+
     public function __construct(?string $cwd = null, ?array $env = null, bool $mergeErrorsAndOutput = false)
     {
         if ($mergeErrorsAndOutput) {
@@ -36,6 +44,14 @@ abstract class AbstractShell implements ShellInterface
                 $this->setEnv($name, $value);
             }
         }
+        $this->setDescriptor(new ReadablePipe(), ShellInterface::DESCRIPTOR_INPUT);
+        $this->setDescriptor(new WritablePipe(), ShellInterface::DESCRIPTOR_OUTPUT);
+        $this->setDescriptor(new WritablePipe(), ShellInterface::DESCRIPTOR_ERRORS);
+    }
+
+    public function setDescriptor(DescriptorInterface $descriptor, int $key)
+    {
+        $this->descriptors[$key] = $descriptor->get();
     }
 
     public function setCwd(?string $cwd): ShellInterface
@@ -62,22 +78,22 @@ abstract class AbstractShell implements ShellInterface
         return $this;
     }
 
-    protected function run(string $command, ?string $cwd = null, ?array $env = null): Result
+    protected function run(string $command, ?string $cwd = null, ?array $env = null, bool $isBackground = false): Result
     {
-        if ($this->mergeErrorsAndOutput) $command .= ' 2>&1';
-        $descriptors = [
-            0 => ['pipe', 'r'],
-            1 => ['pipe', 'w'],
-            2 => ['pipe', 'w'],
-        ];
+        $out = '';
+        if ($this->mergeErrorsAndOutput) $out = ' 2>&1';
+        if ($isBackground) {
+            $out = ' > /dev/null 2>&1 &';
+        }
+        $command .= $out;
         $cwd = $cwd ? $cwd : $this->cwd;
         $env = $env ? array_replace($this->env, $env) : $this->env;
-        $exec = proc_open($command, $descriptors, $pipes, $cwd, $env, null);
+        $exec = proc_open($command, $this->descriptors, $pipes, $cwd, $env, null);
         $output = stream_get_contents($pipes[1]);
         $errors = stream_get_contents($pipes[2]);
-        fclose($pipes[0]);
-        fclose($pipes[1]);
-        fclose($pipes[2]);
+        foreach (array_keys($this->descriptors) as $key) {
+            fclose($pipes[$key]);
+        }
         $exitCode = proc_close($exec);
         return new Result((int)$exitCode, $output, $errors);
     }

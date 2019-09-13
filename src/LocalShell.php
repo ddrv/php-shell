@@ -14,7 +14,12 @@ class LocalShell extends AbstractShell
 
     public function exec(string $command, ?string $cwd = null, ?array $env = null): Result
     {
-        return $this->run($command, $cwd, $env);
+        return $this->run($command, $cwd, $env, false);
+    }
+
+    public function silent(string $command, ?string $cwd = null, ?array $env = null): void
+    {
+        $this->run($command, $cwd, $env, true);
     }
 
     public function upload(string $sourceFile, string $destinationDirectory): bool

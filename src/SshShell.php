@@ -51,6 +51,18 @@ class SshShell extends AbstractShell
 
     public function exec(string $command, ?string $cwd = null, ?array $env = null): Result
     {
+        $cmd = $this->createCommand($command, $cwd, $env);
+        return $this->run($cmd, null, null, false);
+    }
+
+    public function silent(string $command, ?string $cwd = null, ?array $env = null): void
+    {
+        $cmd = $this->createCommand($command, $cwd, $env);
+        $this->run($cmd, null, null, true);
+    }
+
+    private function createCommand(string $command, ?string $cwd, ?array $env): string
+    {
         $cwd = $cwd ? $cwd : $this->cwd;
         $env = $env ? array_replace($this->env, $env) : $this->env;
         $e = '';
@@ -65,7 +77,7 @@ class SshShell extends AbstractShell
         $cmd = 'rsh ' . $connect . ' "';
         if ($cwd) $cmd .= 'cd ' . $cwd . ' && ';
         $cmd .= $e . ' ' . $command . '"';
-        return $this->run($cmd);
+        return $cmd;
     }
 
     public function upload(string $sourceFile, string $destinationDirectory): bool
